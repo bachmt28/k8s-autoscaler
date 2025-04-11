@@ -1,1 +1,11 @@
-# requester | namespace | workload | replica | days | hours | expire | purpose
+# requester | namespace | workload | replica | days     | hours   | expire     | purpose
+pm1        | team1     | svc-a    | 1       | Mon-Fri  | 9h-17h  | 15/08/2025 | test service A
+pm2        | team1     | svc-a    | 3       | Mon-Fri  | 8h-18h  | 20/08/2025 | test override A
+pm3        | team1     | svc-a    | 2       | Tue-Thu  | 10h-16h | 01/07/2025 | extra testing A
+pm1        | team1     | svc-b    | 2       | Mon-Sat  | 9h-22h  | 30/12/2025 | test service B
+pm2        | team1     | svc-c    | 1       | Sat-Sun  | 10h-18h | 10/11/2025 | weekend run C
+pm1        | team2     | svc-x    | 1       | Mon-Fri  | 8h-20h  | 01/01/2026 | long running X
+pm2        | team2     | svc-y    | 2       | Wed-Fri  | 8h-17h  | 10/10/2025 | test service Y
+pm1        | team3     | svc-z    | 2       | Mon-Sun  | 8h-23h  | 31/12/2024 | all week Z
+pm3        | team3     | svc-z    | 1       | Mon-Sun  | 9h-22h  | 31/12/2025 | extended Z
+pm1        | team1     | old-b    | 1       | Mon-Fri  | 8h-18h  | 01/01/2022 | expired rule
