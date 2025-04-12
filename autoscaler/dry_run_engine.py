@@ -1,87 +1,63 @@
 # autoscaler/dry_run_engine.py
 
-import datetime
 from collections import defaultdict
-from autoscaler.ctf_parser import CTFRule
+from datetime import datetime
 from autoscaler.config import ENABLE_NOTIFY
 from autoscaler.notifier import send_webex_message
 
-
-def generate_effective_rules(valid_rules: list[CTFRule]) -> list[CTFRule]:
+def generate_effective_rules(valid_rules):
     grouped = defaultdict(list)
-    for rule in valid_rules:
-        key = (rule.namespace, rule.workload)
-        grouped[key].append(rule)
+    for r in valid_rules:
+        grouped[(r.namespace, r.workload)].append(r)
 
-    def score_rule(r: CTFRule):
-        exp_date = r.expire_date()
-        time_span_score = len(r.days) + len(r.hours)
+    def score(r):
         return (
-            exp_date.year * 10000 + exp_date.month * 100 + exp_date.day,
+            r.expire_date().toordinal(),
             r.replica,
-            time_span_score,
+            len(r.days) + len(r.hours)
         )
 
     effective = []
-    for group in grouped.values():
-        group.sort(key=score_rule, reverse=True)
-        effective.append(group[0])
+    for rule_list in grouped.values():
+        rule_list.sort(key=score, reverse=True)
+        effective.append(rule_list[0])
     return effective
 
+def determine_workload_actions(effective_rules, all_workloads, check_time=None):
+    if check_time is None:
+        check_time = datetime.now()
 
-def determine_workload_actions(
-    rules: list[CTFRule],
-    all_workloads: list[tuple[str, str]],
-    now: datetime.datetime | None = None,
-) -> tuple[list[CTFRule], list[tuple[str, str]]]:
-    if now is None:
-        now = datetime.datetime.now()
-
-    keep = []
+    keep_rules = []
     keep_map = {}
+    for r in effective_rules:
+        if r.matches(check_time):
+            key = (r.namespace, r.workload)
+            keep_map[key] = r
+            keep_rules.append(r)
 
-    for r in rules:
-        if r.matches(now):
-            keep.append(r)
-            keep_map[(r.namespace, r.workload)] = r
+    scale_to_zero = [wl for wl in all_workloads if wl not in keep_map]
+    return keep_rules, scale_to_zero
 
-    scale_to_zero = []
-    for ns, wl in all_workloads:
-        if (ns, wl) not in keep_map:
-            scale_to_zero.append((ns, wl))
-
-    return keep, scale_to_zero
-
-
-def print_dry_run_summary(keep: list[CTFRule], scale_to_zero: list[tuple[str, str]]):
-    print("📥 Tổng số rule được áp dụng:", len(keep))
-
+def print_dry_run_summary(keep, scale_down):
+    print(f"📥 Tổng số rule được áp dụng: {len(keep)}\n")
     if keep:
-        print("\n✅ Workload sẽ được KEEP:")
+        print("✅ Workload sẽ được KEEP:")
         for r in keep:
             print(f" • {r.namespace}/{r.workload} ({r.replica} replicas) — {r.days} {r.hours} đến {r.expire} — {r.purpose}")
-
-    if scale_to_zero:
-        print("\n🛑 Workload sẽ SCALE TO 0:")
-        for ns, wl in scale_to_zero:
+        print()
+    if scale_down:
+        print("🛑 Workload sẽ SCALE TO 0:")
+        for ns, wl in scale_down:
             print(f" • {ns}/{wl}")
-
     if ENABLE_NOTIFY:
-        send_dry_run_webex(keep, scale_to_zero)
-
-
-def send_dry_run_webex(keep: list[CTFRule], scale_to_zero: list[tuple[str, str]]):
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    msg = f"**[Dry-Run Report] {now}**\n\n"
-
-    if keep:
-        msg += "✅ **Workload sẽ được KEEP:**\n"
-        for r in keep:
-            msg += f"• `{r.namespace}/{r.workload}` ({r.replica} replicas) — `{r.days} {r.hours}` đến `{r.expire}`\n  > *{r.purpose}*\n"
-
-    if scale_to_zero:
-        msg += "\n🛑 **Workload sẽ SCALE TO 0:**\n"
-        for ns, wl in scale_to_zero:
-            msg += f"• `{ns}/{wl}`\n"
-
-    send_webex_message(msg)
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        msg = f"**[Dry-Run Report] {now}**\n\n"
+        if keep:
+            msg += "✅ **KEEP:**\n"
+            for r in keep:
+                msg += f"• `{r.namespace}/{r.workload}` ({r.replica}) — `{r.days} {r.hours}` đến `{r.expire}`\n"
+        if scale_down:
+            msg += "\n🛑 **SCALE TO 0:**\n"
+            for ns, wl in scale_down:
+                msg += f"• `{ns}/{wl}`\n"
+        send_webex_message(msg)
