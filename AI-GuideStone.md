@@ -87,6 +87,7 @@
    - Nếu đúng kỳ vọng → nhắc người dùng commit.
    - Nếu chưa đúng → yêu cầu fix.
 3. Sau khi người dùng xác nhận "đã commit", AI sẽ:
+   - Đọc kỹ lại `AI-GuideStone.md` đầu tiên, `URM.md`
    - Pull lại repo
    - Đối chiếu logic, code, test, đối chiếu nội dung xem đã commit đúng chưa
    - Ghi nhận vào Progress Log nếu đạt
