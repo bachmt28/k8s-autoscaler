@@ -56,7 +56,7 @@
 
 ---
 
-## 6. ⏳ Progress Log – Lưu vết phát triển
+## 6. ⏳ Quy ước Progress Log – Lưu vết phát triển
 
 > **Ghi rõ ngày + giờ mỗi khi hoàn thành module / bước quan trọng.**
 > Dùng format chuẩn: `YYYY-MM-DD HH:MM - Mô tả ngắn`
