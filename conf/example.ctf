@@ -9,3 +9,8 @@ pm2        | team2     | svc-y    | 2       | Wed-Fri  | 8h-17h  | 10/10/2025 | 
 pm1        | team3     | svc-z    | 2       | Mon-Sun  | 8h-23h  | 31/12/2024 | all week Z
 pm3        | team3     | svc-z    | 1       | Mon-Sun  | 9h-22h  | 31/12/2025 | extended Z
 pm1        | team1     | old-b    | 1       | Mon-Fri  | 8h-18h  | 01/01/2022 | expired rule
+pm4        | team4     | svc-night   | 1       | Mon-Fri  | 20h-23h | 31/12/2025 | test nightly
+pm5        | team4     | svc-late    | 1       | Sat-Sun  | 00h-02h | 31/12/2025 | late night run
+pm6        | team5     | svc-24x7    | 1       | Mon-Sun  | 00h-24h | 31/12/2025 | full time service
+pm7        | team5     | svc-sun     | 1       | Sun      | 09h-18h | 31/12/2025 | test Sunday only
+# this is a comment
