@@ -172,6 +172,7 @@ k8s-autoscaler/
 | 2024-04-12 | `notifier.py` | ✅ |
 | 2024-04-13 | `scale_executor.py` | ⏳ |
 | 2025-04-12 15:37 | `scale_executor.py` | ✅ Hoàn thành + test dry-run | Đã xử lý PROTECTED_NAMESPACES, log rõ ràng |
+| 2025-04-12 15:52 | `apply_engine.py` | ✅ tổng hợp + gọi scale_executor theo rule đã xử lý |
 
 ## 15. 🎯 Feature & Scenario (Gherkin Format)
 
