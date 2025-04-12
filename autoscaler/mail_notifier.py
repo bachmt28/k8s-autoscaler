@@ -1,1 +1,0 @@
-# Email notifier module
