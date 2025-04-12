@@ -1,78 +1,82 @@
-# 📜 AI-GuideStone.md
-*“Bia chỉ đường – Nguyên tắc nền tảng cho mọi tương tác với AI trợ lý trong project này”*
+# 🧭 AI-GuideStone – Kim chỉ nam  
+*Nguyên tắc nền tảng cho mọi tương tác giữa AI với người dùng*
 
 ---
 
-## 1. 🎯 Mục tiêu và phạm vi
-- Đảm bảo AI luôn hoạt động đúng hướng khi phát triển hệ thống **tự động scale workload K8s ngoài giờ hành chính**.
-- Mọi logic, quy trình và hành vi phải **tuân thủ URD** được cập nhật tại `urd_autoscale.md`.
-- Áp dụng cho toàn bộ giai đoạn từ prototype → build → test → deploy thật.
+## 1. 🎯 Mục tiêu & phạm vi
+- Đảm bảo AI trợ lý hoạt động chính xác, minh bạch, tuần tự khi phối hợp cùng người dùng trong các dự án kỹ thuật, đặc biệt là các hệ thống tự động hóa hoặc có nhiều file/dữ liệu liên quan.
+- Quy định rõ hành vi, trình tự, trách nhiệm hai chiều AI ↔ người dùng.
 
 ---
 
-## 2. 🧭 Tôn chỉ hành động
+## 2. 📌 Tôn chỉ hành động
 
-| Nguyên tắc | Mô tả |
-|------------|-------|
-| **Luôn luôn bám sát URD** | Đọc hiểu `urd_autoscale.md` từ GitHub repo trước khi bắt đầu bất kỳ tác vụ nào. |
-| **Mỗi bước đều có xác nhận** | Hoàn thành 1 module → phải có: code, test, log kết quả → cập nhật vào URD. |
-| **Luôn gợi ý cụ thể, không mơ hồ** | Không dùng “tuỳ bạn”, “có thể”, “có vẻ như”. Luôn có đề xuất rõ ràng. |
-| **Tách dữ liệu & logic** | Khi xử lý giả lập → phân biệt dữ liệu thật (do user cung cấp) và phần xử lý logic tự động. |
-| **Không skip test** | Dù logic đơn giản, cũng phải có test case kèm dữ liệu rõ ràng. |
-| **Không “quên cập nhật URD”** | Mọi thay đổi logic/code/test đều phải được cập nhật URD kèm timestamp. |
-| **Luôn minh bạch** | Phản hồi rõ ràng mọi hành vi đang làm, không được “tự tiện thông minh”. |
-
----
-
-## 3. 🧩 Tệp/Dữ liệu AI phải đọc trước
-
-| Tệp | Vai trò |
-|-----|--------|
-| `urd_autoscale.md` | URD tổng thể mô tả logic, flow, quy trình áp dụng |
-| `conf/example.ctf` | File đầu vào test cho dry-run engine |
-| `tests/test_dry_run_engine.py` | Kiểm thử logic xử lý rule |
-| `.env` hoặc `config.py` | Biến môi trường và thông số điều khiển (Webex, Protected NS...) |
+| Nguyên tắc | Diễn giải |
+|-----------|-----------|
+| **Đọc trước khi làm** | Luôn đọc kỹ `URD.md`, và các file cấu hình trước khi thực hiện. |
+| **Bám sát từng bước** | Mỗi module hoàn thành cần có: mã nguồn, test, kết quả kiểm tra, cập nhật URD. |
+| **Không mơ hồ** | Không dùng từ ngữ như “tuỳ bạn”, “có thể”, “chắc là”. Luôn đưa ra phản hồi rõ ràng, nếu cần hỏi lại. |
+| **Phân tách rõ ràng** | Logic xử lý và dữ liệu đầu vào cần tách biệt. Tránh hardcode, tránh đoán bừa dữ liệu. |
+| **Luôn có test** | Dù đơn giản cũng cần test (unit/integration). Không có test = chưa hoàn thành. |
+| **Cập nhật URD mỗi bước** | Hoàn thành/xử lý gì → ghi lại trong URD hoặc Progress Log. |
+| **Tôn trọng thông tin đầu vào** | Mọi input từ user như file `.ctf`, `.env`, URD... cần được hiểu kỹ và không giả định thiếu cơ sở. |
 
 ---
 
-## 4. 🔐 Giới hạn quyền thao tác
+## 3. 🧩 Các tệp/dữ liệu AI cần đọc trước
 
-- Không được phép chọc vào môi trường thật của user.
-- Tất cả thao tác truy cập kubeconfig, gửi Webex… đều chạy **giả lập**, user sẽ thực thi thật nếu cần.
-- Nếu cần môi trường thật, AI chỉ **gợi ý câu lệnh / thao tác**.
-
----
-
-## 5. ✅ Chuỗi hành động chuẩn
-
-> 1. Nhận repo → đọc toàn bộ file, bắt đầu từ `AI-GuideStone.md` và `urd_autoscale.md`.
-> 2. Xác định module cần làm theo tiến trình URD.
-> 3. Mỗi bước làm gồm:
->    - Viết module (`*.py`)
->    - Tạo test (`tests/`)
->    - Thực thi kiểm thử
->    - Ghi log kết quả
->    - Cập nhật `Progress Log` trong URD
-> 4. Không skip test, không nhảy bước, không lược bớt.
-> 5. Sau mỗi phần logic mới → đề xuất chỉnh URD nếu cần.
+| Tên tệp | Vai trò |
+|--------|---------|
+| `URD.md` | URD chính thức mô tả toàn bộ logic hệ thống |
+| `conf/example.ctf` | Dữ liệu test đầu vào, cần đọc kỹ định dạng |
+| `tests/test_*.py` | Mẫu unit test / test thực tế để kiểm tra logic |
+| `.env` | Biến môi trường / thông số cần thiết khi giả lập |
+| `AI-GuideStone.md` _(nếu có)_ | Quy định riêng về hành vi AI trong dự án |
 
 ---
 
-## 6. 📌 File/dữ liệu đặc biệt cần lưu ý
+## 4. 🔐 Hạn chế & quyền truy cập
 
-- `protected_namespaces.txt`: chứa namespace không được scale (đã có trong URD)
-- Webex token, roomId: cần `.env` hoặc biến môi trường
-- Mọi input đều dạng text file (không nhập tay trên giao diện)
-
----
-
-## 7. 📅 Lịch sử cập nhật
-
-| Ngày | Nội dung | Người cập nhật |
-|------|----------|----------------|
-| 2025-04-13 | Tạo file AI-GuideStone lần đầu | User |
-| 2025-04-13 | Bổ sung logic protected namespace, tôn chỉ kiểm soát test | AI Assistant |
+- AI không được phép truy cập môi trường thật (trừ khi được cấp mock).
+- Kubeconfig, token thật, credential → chỉ dùng để giả lập/tái hiện theo hướng dẫn, không dùng thật.
+- Nếu thao tác thật cần thiết → AI chỉ mô tả câu lệnh/gợi ý, không tự chạy.
 
 ---
 
-> *“Tôn chỉ này là gốc rễ. Mọi logic đều phát sinh từ đây và quay về đây.”*
+## 5. 🪜 Chuỗi hành động chuẩn
+
+1. Người dùng upload/cung cấp repo public → AI clone về, đọc toàn bộ `urd_autoscale.md` & `AI-GuideStone.md` nếu có.
+2. Xác định rõ giai đoạn hiện tại (dựa vào Progress Log hoặc yêu cầu cụ thể).
+3. Thực hiện module gồm:
+   - ✅ Viết/mở rộng code
+   - ✅ Tạo unit test
+   - ✅ Chạy thử / xác nhận
+   - ✅ Cập nhật URD → Progress Log
+4. Không nhảy bước, không skip test, không để trạng thái "gần xong".
+
+---
+
+## 6. ⏳ Progress Log – Lưu vết phát triển
+
+> **Ghi rõ ngày + giờ mỗi khi hoàn thành module / bước quan trọng.**
+> Dùng format chuẩn: `YYYY-MM-DD HH:MM - Mô tả ngắn`
+
+- Ví dụ minh họa:
+| Thời gian | Module | Trạng thái | Ghi chú |
+|-----------|--------|------------|--------|
+| 2025-04-13 15:20 | `ctf_parser.py` | ✅ Hoàn thành & test | Đã validate + xử lý conflict |
+| 2025-04-13 15:30 | `dry_run_engine.py` | ✅ | Kết hợp Webex notifier + logic fallback |
+| ... | ... | ... | ... |
+
+---
+
+## 7. 📝 Quy ước mở rộng nếu cần
+
+- Nếu project cần thêm thông tin nền như diagram, cron, flowchart... → bổ sung riêng vào `docs/` hoặc `extras/`.
+- Nếu AI cần mô phỏng thì cần phân biệt:  
+  `thao tác logic (AI xử lý)` vs `thao tác môi trường thật (user thực thi)`
+
+---
+
+> *“Mọi hành vi không nằm trong tôn chỉ đều phải được xem xét lại.”*
+
