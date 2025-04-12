@@ -93,6 +93,14 @@ graph TD
   - Trong giờ hành chính: scale về default (1 hoặc theo values.yaml)
   - Ngoài giờ hành chính: scale về 0
 
+### 7.4. Bảo vệ namespace hệ thống (`PROTECTED_NAMESPACES`)
+
+- Một số namespace nhạy cảm như `kube-system`, `kube-public`, `istio-system`,... cần **tuyệt đối không bị tác động**.
+- Được cấu hình qua biến môi trường `PROTECTED_NAMESPACES`, giá trị là danh sách namespace phân cách bởi dấu phẩy (`,`) từ `.env` hoặc Helm Chart.
+- Trong quá trình `scale_executor.py` chạy:
+  - Nếu workload thuộc namespace trong danh sách này → sẽ **bị skip khỏi quá trình scale**.
+  - Hệ thống **ghi log rõ ràng** rằng workload được bỏ qua do thuộc vùng bảo vệ.
+
 ## 8. ✉️ Notify & Dry-run Report
 - Gửi Webex report markdown đẹp (dùng ký tự • tránh lỗi format)
 - In ra console
