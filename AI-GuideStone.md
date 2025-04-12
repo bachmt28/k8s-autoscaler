@@ -91,7 +91,6 @@
    - Ghi nhận vào Progress Log nếu đạt
    - Chỉ bắt đầu module tiếp theo sau khi đã sync xong.
 
-👉 Mốc xác nhận để AI bắt đầu:
 
 ---
 > *“Mọi hành vi không nằm trong tôn chỉ đều phải được xem xét lại.”*
