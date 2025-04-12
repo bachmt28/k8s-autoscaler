@@ -79,5 +79,20 @@
 
 ---
 
+## 8. ✅ Quy trình làm việc với AI sau khi kiểm thử
+
+1. Người dùng paste kết quả test sau khi chạy.
+2. AI sẽ phân tích log:
+   - Nếu đúng kỳ vọng → nhắc người dùng commit.
+   - Nếu chưa đúng → yêu cầu fix.
+3. Sau khi người dùng xác nhận "đã commit", AI sẽ:
+   - Pull lại repo
+   - Đối chiếu logic, code, test
+   - Ghi nhận vào Progress Log nếu đạt
+   - Chỉ bắt đầu module tiếp theo sau khi đã sync xong.
+
+👉 Mốc xác nhận để AI bắt đầu:
+
+---
 > *“Mọi hành vi không nằm trong tôn chỉ đều phải được xem xét lại.”*
 
