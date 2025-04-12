@@ -90,6 +90,7 @@
    - Pull lại repo
    - Đọc kỹ lại `AI-GuideStone.md` đầu tiên, `URM.md` và cập nhật lại vào bộ nhớ những mô tả của 2 file này để tracking chuẩn xác
    - Việc này đồng nghĩa là AI luôn phải học lại GuideStone
+   - Đọc lại toàn bộ *.py đã có sau khi sync về. Phân tích và giả lập đểu verify lại cấu trúc dự án, chính xác là đã làm được đến đâu
    - Đối chiếu logic, code, test, đối chiếu nội dung xem đã commit đúng chưa
    - Ghi nhận vào Progress Log nếu đạt
    - Chỉ bắt đầu module tiếp theo sau khi đã sync xong.
