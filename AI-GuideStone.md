@@ -62,6 +62,7 @@
 > Dùng format chuẩn: `YYYY-MM-DD HH:MM - Mô tả ngắn`
 
 - Ví dụ minh họa:
+  
 | Thời gian | Module | Trạng thái | Ghi chú |
 |-----------|--------|------------|--------|
 | 2025-04-13 15:20 | `ctf_parser.py` | ✅ Hoàn thành & test | Đã validate + xử lý conflict |
