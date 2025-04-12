@@ -61,3 +61,5 @@ def print_dry_run_summary(keep, scale_down):
             for ns, wl in scale_down:
                 msg += f"• `{ns}/{wl}`\n"
         send_webex_message(msg)
+
+        
