@@ -1,112 +1,120 @@
 # autoscaler/dry_run_engine.py
 
-"""
-Module: dry_run_engine
-Chức năng:
-- Nhận danh sách rule CTF (sau khi parse & validate)
-- Áp dụng logic conflict: giữ rule mạnh nhất nếu bị trùng
-- Trả ra danh sách workload cần KEEP hoặc SCALE TO 0 tại thời điểm hiện tại
-"""
-
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import List, Tuple
+from autoscaler.config import ENABLE_NOTIFY, PROTECTED_NAMESPACES
+from autoscaler.notifier import send_webex_message
 from autoscaler.ctf_parser import CTFRule
 
 
-from datetime import datetime
+def generate_effective_rules(valid_rules: List[CTFRule]) -> List[CTFRule]:
+    grouped = defaultdict(list)
+    for r in valid_rules:
+        key = (r.namespace, r.workload)
+        grouped[key].append(r)
 
-def score_rule(rule: CTFRule) -> Tuple[int, int, int]:
-    """Tính điểm cho rule để so sánh ưu tiên"""
-    days_count = len(rule.days.split("-")) if "-" in rule.days else 1
-    hours_range = rule.hours.replace("h", "").split("-")
-    hours_span = int(hours_range[1]) - int(hours_range[0]) if len(hours_range) == 2 else 0
+    def score_rule(r: CTFRule):
+        exp_date = r.expire_date()
+        exp_score = (
+            exp_date.year * 10000 + exp_date.month * 100 + exp_date.day
+            if exp_date else 0
+        )
+        return (
+            exp_score,              # Ưu tiên rule có expire xa hơn
+            r.replica,              # Ưu tiên replica lớn hơn
+            len(r.days) + len(r.hours)  # Ưu tiên khung thời gian dài hơn
+        )
 
-    # Ép expire về datetime nếu cần
-    if isinstance(rule.expire, str):
-        try:
-            rule.expire = datetime.strptime(rule.expire.strip(), "%d/%m/%Y").date()
-        except Exception:
-            rule.expire = datetime(1970, 1, 1).date()
-
-    return (
-        rule.expire.year * 10000 + rule.expire.month * 100 + rule.expire.day,
-        rule.replica,
-        days_count * hours_span
-    )
-
-
-
-def generate_effective_rules(rules: List[CTFRule]) -> Dict[str, CTFRule]:
-    """Tìm rule mạnh nhất cho mỗi namespace/workload"""
-    grouped: Dict[str, List[CTFRule]] = defaultdict(list)
-
-    for rule in rules:
-        key = f"{rule.namespace}/{rule.workload}"
-        grouped[key].append(rule)
-
-    effective = {}
-
-    for key, rule_list in grouped.items():
+    effective_rules = []
+    for rule_list in grouped.values():
         rule_list.sort(key=score_rule, reverse=True)
-        best_rule = rule_list[0]
-        effective[key] = best_rule
+        best = rule_list[0]
+        effective_rules.append(best)
 
-    return effective
+    return effective_rules
 
 
 def determine_workload_actions(
-    effective_rules: Dict[str, CTFRule],
+    effective_rules: List[CTFRule],
     all_workloads: List[str],
-    now: datetime,
-    fallback_in_office_hour: bool = True,
-    default_replica: int = 1,
-) -> Tuple[List[CTFRule], List[Tuple[str, int]]]:
-    """
-    Trả ra danh sách workload cần KEEP (theo rule hoặc fallback giờ hành chính)
-    và danh sách workload cần SCALE TO 0 (không có rule và ngoài giờ)
-    """
+    now: datetime = None
+) -> Tuple[List[CTFRule], List[str], List[str]]:
+    if now is None:
+        now = datetime.now()
+
     keep = []
-    scale_down = []
+    scale_to_zero = []
+    skipped = []
 
-    current_day = now.strftime("%a")  # Mon, Tue,...
-    current_hour = now.hour
+    now_day = now.strftime("%a")  # Mon, Tue, ...
+    now_hour = now.hour
 
-    # Tìm rule match giờ/ngày
-    keep_keys = set()
-    for key, rule in effective_rules.items():
-        if current_day not in rule.days:
-            continue
-        hour_range = rule.hours.replace("h", "").split("-")
-        if len(hour_range) != 2:
-            continue
-        start, end = int(hour_range[0]), int(hour_range[1])
-        if start <= current_hour <= end:
-            keep.append(rule)
-            keep_keys.add(key)
+    keep_map = {}
 
-    # Với workload không có rule → kiểm tra fallback giờ hành chính
-    for w in all_workloads:
-        if w in keep_keys:
+    for rule in effective_rules:
+        workload_key = f"{rule.namespace}/{rule.workload}"
+        if rule.namespace in PROTECTED_NAMESPACES:
+            skipped.append(workload_key)
             continue
 
-        if fallback_in_office_hour:
-            day_office = ["Mon", "Tue", "Wed", "Thu", "Fri"]
-            if current_day in day_office and 8 <= current_hour <= 18:
-                # Giữ lại với replica mặc định
-                namespace, workload = w.split("/")
-                keep.append(CTFRule(
-                    requester="fallback",
-                    namespace=namespace,
-                    workload=workload,
-                    replica=default_replica,
-                    days=current_day,
-                    hours=f"{current_hour}h-{current_hour+1}h",
-                    expire=now.date(),
-                    purpose="Default during office hours"
-                ))
+        if now_day in rule.days:
+            hour_range = rule.hours.replace("h", "").split("-")
+            try:
+                h_start = int(hour_range[0])
+                h_end = int(hour_range[1])
+                if h_start <= now_hour < h_end:
+                    keep.append(rule)
+                    keep_map[workload_key] = rule
+            except:
                 continue
 
-        scale_down.append((w, 0))
+    for w in all_workloads:
+        if w in keep_map:
+            continue
+        ns = w.split("/")[0]
+        if ns in PROTECTED_NAMESPACES:
+            skipped.append(w)
+        else:
+            scale_to_zero.append(w)
 
-    return keep, scale_down
+    return keep, scale_to_zero, skipped
+
+
+def print_dry_run_summary(
+    keep_rules: List[CTFRule],
+    scale_to_zero: List[str],
+    skipped: List[str]
+):
+    print(f"\n📌 KEEP các workload (theo rule tại thời điểm này):")
+    for r in keep_rules:
+        print(f" • {r.namespace}/{r.workload} ({r.replica} replicas) — {r.days} {r.hours} đến {r.expire} — {r.purpose}")
+
+    print(f"\n🛑 SCALE TO 0 các workload không match:")
+    for w in scale_to_zero:
+        print(f" • {w}")
+
+    if skipped:
+        print(f"\n❗ SKIPPED (Protected Namespaces):")
+        for w in skipped:
+            print(f" • {w}")
+
+    # Gửi Webex nếu bật
+    if ENABLE_NOTIFY:
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        msg = f"**[Dry-Run Report] {now_str}**\n\n"
+
+        if keep_rules:
+            msg += "✅ **KEEP:**\n"
+            for r in keep_rules:
+                msg += f"• `{r.namespace}/{r.workload}` ({r.replica} replicas) — `{r.days} {r.hours}` đến `{r.expire}`\n> _{r.purpose}_\n"
+        if scale_to_zero:
+            msg += "\n🛑 **SCALE TO 0:**\n"
+            for w in scale_to_zero:
+                msg += f"• `{w}`\n"
+        if skipped:
+            msg += "\n❗ **SKIPPED (Protected Namespaces):**\n"
+            for w in skipped:
+                msg += f"• `{w}`\n"
+
+        send_webex_message(msg)
