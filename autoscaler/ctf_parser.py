@@ -8,9 +8,9 @@ Chức năng:
 - Phân loại rule còn hạn và hết hạn
 """
 
-import datetime
-from typing import List, Optional
 from dataclasses import dataclass
+from typing import List, Optional
+from datetime import datetime
 
 
 @dataclass
@@ -21,25 +21,49 @@ class CTFRule:
     replica: int
     days: str
     hours: str
-    expire: str  # giữ nguyên string để dễ debug/log
+    expire: datetime
     purpose: str
 
-    def expire_date(self) -> Optional[datetime.date]:
-        """Trả về đối tượng datetime.date nếu hợp lệ, None nếu lỗi"""
-        try:
-            return datetime.datetime.strptime(self.expire.strip(), "%d/%m/%Y").date()
-        except ValueError:
-            return None
-
-    def is_expired(self, today: Optional[datetime.date] = None) -> bool:
-        """Kiểm tra rule đã hết hạn chưa"""
+    def is_expired(self, today: Optional[datetime] = None) -> bool:
         if today is None:
-            today = datetime.date.today()
-        exp = self.expire_date()
-        return exp is None or today > exp
+            today = datetime.now()
+        return today.date() > self.expire.date()
 
 
 def parse_ctf_file(file_path: str) -> List[CTFRule]:
     rules: List[CTFRule] = []
     with open(file_path, "r", encoding="utf-8") as f:
         for lineno, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            parts = [p.strip() for p in line.split("|")]
+            if len(parts) < 8:
+                print(f"[CTF] ⚠️  Bỏ qua dòng {lineno}: thiếu trường ({len(parts)}/8)")
+                continue
+
+            try:
+                expire_dt = datetime.strptime(parts[6], "%d/%m/%Y")
+                rule = CTFRule(
+                    requester=parts[0],
+                    namespace=parts[1],
+                    workload=parts[2],
+                    replica=int(parts[3]),
+                    days=parts[4],
+                    hours=parts[5],
+                    expire=expire_dt,
+                    purpose=parts[7]
+                )
+                rules.append(rule)
+            except Exception as e:
+                print(f"[CTF] ❌ Lỗi dòng {lineno}: {e}")
+    return rules
+
+
+def get_valid_rules(rules: List[CTFRule]) -> List[CTFRule]:
+    return [r for r in rules if not r.is_expired()]
+
+
+def get_expired_rules(rules: List[CTFRule]) -> List[CTFRule]:
+    return [r for r in rules if r.is_expired()]
