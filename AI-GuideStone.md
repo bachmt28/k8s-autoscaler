@@ -88,7 +88,7 @@
    - Nếu chưa đúng → yêu cầu fix.
 3. Sau khi người dùng xác nhận "đã commit", AI sẽ:
    - Pull lại repo
-   - Đối chiếu logic, code, test
+   - Đối chiếu logic, code, test, đối chiếu nội dung xem đã commit đúng chưa
    - Ghi nhận vào Progress Log nếu đạt
    - Chỉ bắt đầu module tiếp theo sau khi đã sync xong.
 
