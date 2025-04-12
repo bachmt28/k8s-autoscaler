@@ -30,7 +30,7 @@
 |--------|---------|
 | `URD.md` | URD chính thức mô tả toàn bộ logic hệ thống |
 | `conf/example.ctf` | Dữ liệu test đầu vào, cần đọc kỹ định dạng |
-| `tests/test_*.py` | Mẫu unit test / test thực tế để kiểm tra logic |
+| `.*.py` | Toàn bộ các file .py của module và unitest |
 | `.env` | Biến môi trường / thông số cần thiết khi giả lập |
 | `AI-GuideStone.md` _(nếu có)_ | Quy định riêng về hành vi AI trong dự án |
 
